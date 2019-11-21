@@ -10,7 +10,7 @@ Monitor your iGrill (mini, v2 or v3) (with a Raspberry Pi 1/2/3) - and forward i
 ## Installation
 1. clone this repo
 1. install required modules (see requirements.txt)
-1. Add at least one device config (see ./exampleconfig/device.yaml) - to find your device MAC just run `hcitool lescan`
+1. Add at least one device config (see ./exampleconfig/device.yaml) - to find your device MAC just run `hcitool lescan`: change a few hard-coded items (e.g. the MAC address of the iGrill 2 device)
 1. start application `./monitor.py`
 1. enjoy
 
