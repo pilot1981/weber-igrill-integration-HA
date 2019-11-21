@@ -1,0 +1,179 @@
+configuration.yaml
+
+Copy to clipboard
+          - platform: mqtt
+            state_topic: "bbq/grill/probe1"
+            name: "Probe 1"
+            qos: 0
+            unit_of_measurement: "°F"
+          - platform: mqtt
+            state_topic: "bbq/grill/probe2"
+            name: "Probe 2"
+            qos: 0
+            unit_of_measurement: "°F"
+          - platform: mqtt
+            state_topic: "bbq/grill/probe3"
+            name: "Probe 3"
+            qos: 0
+            unit_of_measurement: "°F"
+          - platform: mqtt
+            state_topic: "bbq/grill/probe4"
+            name: "Probe 4"
+            qos: 0
+            unit_of_measurement: "°F"
+          - platform: mqtt
+            state_topic: "bbq/grill/battery"
+            name: "igrill battery"
+            qos: 0
+            unit_of_measurement: "%"
+    - platform: template
+        sensors:
+          grill_alert_temp:
+            value_template:
+              '{% if (states.sensor.probe_4.state | int) < (states.input_number.grill_alert_low.state | int) or (states.sensor.probe_4.state | int)  > (states.input_number.grill_alert_high.state | int) %}
+                Alert
+              {% else %}
+                Normal
+              {% endif %}'
+            friendly_name: Grill Temp Alert
+      - platform: template
+        sensors:
+          target_alert_temp_probe_1:
+            value_template:
+              '{% if (states.sensor.probe_1.state | int) >= (states.input_number.grill_probe_1_target.state | int) %}
+                Alert
+              {% else %}
+                Normal
+              {% endif %}'
+            friendly_name: Probe 1 Target Alert
+      - platform: template
+        sensors:
+          target_alert_temp_probe_2:
+            value_template:
+              '{% if (states.sensor.probe_2.state | int) >= (states.input_number.grill_probe_2_target.state | int) %}
+                Alert
+              {% else %}
+                Normal
+              {% endif %}'
+            friendly_name: Probe 2 Target Alert
+    - platform: template
+        sensors:
+          target_alert_temp_probe_3:
+            value_template:
+              '{% if (states.sensor.probe_3.state | int) >= (states.input_number.grill_probe_3_target.state | int) %}
+                Alert
+              {% else %}
+                Normal
+              {% endif %}'
+            friendly_name: Probe 3 Target Alert
+    input_number:
+        grill_alert_low:
+        name: Grill Low Temp
+        initial: 150
+        min: 100
+        max: 500
+        step: 5
+      grill_alert_high:
+        name: Grill High Temp
+        initial: 340
+        min: 100
+        max: 500
+        step: 5
+      grill_probe_1_target:
+        name: Probe 1 Target Temp
+        initial: 160
+        min: 60
+        max: 250
+        step: 1
+      grill_probe_2_target:
+        name: Probe 2 Target Temp
+        initial: 160
+        min: 60
+        max: 250
+        step: 1
+      grill_probe_3_target:
+        name: Probe 3 Target Temp
+        initial: 160
+        min: 60
+        max: 250
+        step: 1
+automations.yaml
+
+Copy to clipboard
+    - alias: "Monitor Grill Temp Alert"
+      trigger:
+        - platform: state
+          entity_id: sensor.grill_alert_temp
+          to: 'Alert'
+      action:
+        - service: notify.ios_notify
+          data:
+            message: "Grill temp outside limits. Currently {{ states.sensor.probe_4.state }} F"
+
+    - alias: "Monitor Grill Temp Normal"
+      trigger:
+        - platform: state
+          entity_id: sensor.grill_alert_temp
+          to: 'Normal'
+      action:
+        - service: notify.ios_notify
+          data:
+            message: "Grill temp within limits. Currently {{ states.sensor.probe_4.state }} F"
+
+    - alias: "Probe 1 Target Temp"
+      trigger:
+        - platform: state
+          entity_id: sensor.target_alert_temp_probe_1
+          to: 'Alert'
+      action:
+        - service: notify.ios_notify
+          data:
+            message: "Probe 1 has reached the target temp. Currently {{ states.sensor.probe_1.state }} F"
+
+    - alias: "Probe 2 Target Temp"
+      trigger:
+        - platform: state
+          entity_id: sensor.target_alert_temp_probe_2
+          to: 'Alert'
+      action:
+        - service: notify.ios_notify
+          data:
+            message: "Probe 2 has reached the target temp. Currently {{ states.sensor.probe_2.state }} F"
+
+    - alias: "Probe 3 Target Temp"
+      trigger:
+        - platform: state
+          entity_id: sensor.target_alert_temp_probe_3
+          to: 'Alert'
+      action:
+        - service: notify.ios_notify
+          data:
+            message: "Probe 3 has reached the target temp. Currently {{ states.sensor.probe_3.state }} F"
+ui-lovelace.yaml
+
+Copy to clipboard
+    - icon: mdi:pig
+        title: iGrill
+        cards:
+          - type: vertical-stack
+            cards:
+             - type: weather-forecast
+               entity: weather.openweathermap
+             - type: entities
+               show_header_toggle: true
+               title: Weber iGrill
+               entities:
+                 - entity: sensor.probe_1
+                   secondary_info: last-changed
+                 - entity: sensor.probe_2
+                   secondary_info: last-changed
+                 - entity: sensor.probe_3
+                   secondary_info: last-changed
+                 - entity: sensor.probe_4
+                   secondary_info: last-changed
+                 - entity: sensor.igrill_battery
+                   secondary_info: last-changed
+          - type: horizontal-stack
+            cards:
+             - type: custom:gauge-card
+               title: Probe 1
