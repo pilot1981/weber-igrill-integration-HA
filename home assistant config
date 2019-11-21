@@ -1,3 +1,18 @@
+#######device.yaml
+
+devices:
+  - name:       'grill'      
+    type:       'igrill_v2'  
+    address:    'RE:AL:MA:C' 
+
+#####mqtt.yaml
+
+
+mqtt:
+  host:       '192.168.7.14'    
+  port:       1883              
+
+
 ######groups.yaml:
 
 igrill:
