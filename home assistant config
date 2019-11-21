@@ -1,3 +1,29 @@
+######groups.yaml:
+
+igrill:
+    name: Weber iGrill
+    entities:
+      - sensor.probe_1
+      - sensor.probe_2
+      - sensor.probe_3
+      - sensor.probe_4
+      - sensor.igrill_battery
+      - input_number.grill_probe_1_target
+      - sensor.target_alert_temp_probe_1
+      - input_number.grill_probe_2_target
+      - sensor.target_alert_temp_probe_2
+      - input_number.grill_probe_3_target
+      - sensor.target_alert_temp_probe_3
+      - input_number.grill_alert_low
+      - input_number.grill_alert_high
+      - sensor.grill_alert_temp
+      - automation.monitor_grill_temp_alert
+      - automation.monitor_grill_temp_normal 
+      - automation.probe_1_target_temp
+      - automation.probe_2_target_temp
+      - automation.probe_3_target_temp
+
+
 #######configuration.yaml:
 
 
