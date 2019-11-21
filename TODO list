@@ -4,3 +4,16 @@
 - ADDRESS and mqtt_server in monitor_igrill_v2.py
 - mqtt.yaml to show my host IP and port for my mqtt server
 - 3 shouldn’t have been nexessary, I think, because the mqtt info is hardcoded in the file monitor_igrill_v2.py anyway
+
+
+I also modified the monitor_igrillv2.py like this and made the file executable:
+
+
+import json
+import time
+import paho.mqtt.client as mqtt
+
+from igrill import IGrillV2Peripheral
+
+ADDRESS = 'RE:AL:MA:CD'
+mqtt_server = "mqtt"
