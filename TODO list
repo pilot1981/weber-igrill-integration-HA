@@ -17,3 +17,197 @@ from igrill import IGrillV2Peripheral
 
 ADDRESS = 'RE:AL:MA:CD'
 mqtt_server = "mqtt"
+
+
+input_select:
+  bbq_sensor_1:
+    name: Sensor 1
+    options:
+    - none
+    - Kern
+    - BBQ
+    initial: none
+    icon: mdi:pin
+  bbq_sensor_2:
+    name: Sensor 2
+    options:
+    - none
+    - Kern
+    - BBQ
+    initial: none
+    icon: mdi:pin
+
+input_number:
+  sensor_min_1:
+    name: min
+    unit_of_measurement: "°C"
+    initial: 50
+    min: 0
+    max: 350
+    step: 1
+  sensor_max_1:
+    name: max
+    unit_of_measurement: "°C"
+    initial: 350
+    min: 0
+    max: 350
+    step: 1
+  sensor_kern_1:
+    name: kern
+    mode: box
+    unit_of_measurement: "°C"
+    initial: 50
+    min: 30
+    max: 100
+    step: 1
+  sensor_min_2:
+    name: min
+    unit_of_measurement: "°C"
+    initial: 50
+    min: 0
+    max: 350
+    step: 1
+  sensor_max_2:
+    name: max
+    unit_of_measurement: "°C"
+    initial: 350
+    min: 0
+    max: 350
+    step: 1
+  sensor_kern_2:
+    name: kern
+    mode: box
+    unit_of_measurement: "°C"
+    initial: 50
+    min: 30
+    max: 100
+    step: 1
+
+group:
+  probe_1:
+    name: Probe 1
+    entities:
+    # - sensor.sensor1
+    - input_select.bbq_sensor_1
+    # - input_boolean.min_alarm_sensor_1
+  probe_2:
+    name: Probe 2
+    entities:
+    # - sensor.sensor2
+    - input_select.bbq_sensor_2
+
+  probe_bbq_1:
+    name: Probe 1 bbq
+    entities:
+    - input_number.sensor_min_1
+    - input_number.sensor_max_1
+    - input_boolean.min_alarm_sensor_1
+  probe_bbq_2:
+    name: Probe 2 bbq
+    entities:
+    - input_number.sensor_min_2
+    - input_number.sensor_max_2
+    - input_boolean.min_alarm_sensor_2
+  probe_kern_1:
+    name: Probe 1 bbq
+    entities:
+    - input_number.sensor_kern_1
+  probe_kern_2:
+    name: Probe 2 bbq
+    entities:
+    - input_number.sensor_kern_2
+
+input_boolean:
+  min_alarm_sensor_1:
+    name: Min Alarm Sensor 1
+    initial: off
+  min_alarm_sensor_2:
+    name: Min Alarm Sensor 2
+    initial: off
+Appdeamon in apps folder called bbq.py
+
+Copy to clipboard
+import appdaemon.plugins.hass.hassapi as hass
+
+class BBQtemp(hass.Hass):
+
+  def initialize(self):
+    self.select = "input_select.bbq_sensor_" + str(self.args["number"])
+    self.sensor = "sensor.sensor_" + str(self.args["number"])
+    self.number_kern = "input_number.sensor_kern_" + str(self.args["number"])
+    self.number_min = "input_number.sensor_min_" + str(self.args["number"])
+    self.number_max = "input_number.sensor_max_" + str(self.args["number"])
+    self.min_alarm = "input_boolean.min_alarm_sensor_" + str(self.args["number"])
+    self.group_kern = "group.probe_kern_" + str(self.args["number"])
+    self.group_bbq = "group.probe_bbq_" + str(self.args["number"])
+    self.group_probe = "group.probe_" + str(self.args["number"])
+    self.listen_state(self.temp_change, self.sensor)
+    self.listen_state(self.temp_type, self.select)
+    self.warning = False
+  def temp_change(self, entity, attribute, old, new, kwargs):
+    self.log(entity)
+    self.log(new)
+    if new == "unknown":
+      self.log(new)
+      self.call_service("notify/pushbullet", message = "temperatuur sensor " + str(self.args["number"]) + " is uitgevallen")
+#      self.call_service("group/set_visibility", entity_id = self.group_probe, visible = False )
+      self.call_service("group/set_visibility", entity_id = self.group_bbq, visible = False )
+      self.call_service("group/set_visibility", entity_id = self.group_kern, visible = False )
+    else:
+      self.type = self.get_state(entity = self.select)
+      if self.type == "Kern":
+        if int(float(new)) >= int(float(self.get_state(entity = self.number_kern))) and self.warning == False:
+          self.warning = True
+          self.log("heet")
+          self.call_service("notify/pushbullet", message = "kern temperatuur sensor " + str(self.args["number"]) + " bereikt")
+      #    self.call_service("tts/google_say", intity_id = "media_player.google_home", message = "kern temperatuur sensor " + str(self.args["number"]) + " bereikt")
+          self.run_in(self.warning_timer, 3)
+      elif self.type == "BBQ":
+        #self.log("type is BBQ")
+        self.start = self.get_state(self.min_alarm)
+        if int(float(new)) < int(float(self.get_state(entity = self.number_min))) and self.warning == False and self.start == "on": 
+          self.warning = True
+          self.log("bbq te koud")
+          self.call_service("notify/pushbullet", message = "BBQ sensor " + str(self.args["number"]) + " te koud")
+#         self.call_service("tts/google_say", intity_id = "media_player.google_home", message = "kern temperatuur sensor 1 bereikt")
+          self.run_in(self.warning_timer, 3)
+        elif int(float(new)) > int(float(self.get_state(entity = self.number_max))) and self.warning == False:
+          self.set_state(self.min_alarm, state = "on")
+          self.warning = True
+          self.log("BBQ te heet")
+          self.call_service("notify/pushbullet", message = "BBQ sensor " + str(self.args["number"]) + " te heet")
+#          self.call_service("tts/google_say", intity_id = "media_player.google_home", message = "kern temperatuur sensor 1 bereikt")
+          self.run_in(self.warning_timer, 3)
+      else:
+        self.log("type is None")
+        self.call_service("group/set_visibility", entity_id = self.group_probe, visible = True )
+  def temp_type(self, entity, attribute, old, new, kwargs):
+ #   if state = "None"
+ #   self.log (new)
+    if new == "none":
+      self.log("set to none")
+      self.log(self.group_bbq)
+      self.call_service("group/set_visibility", entity_id = self.group_bbq, visible = False )
+      self.call_service("group/set_visibility", entity_id = self.group_kern, visible = False )
+    if new == "Kern":
+      self.log("set to Kern")
+      self.call_service("group/set_visibility", entity_id = self.group_bbq, visible = False )
+      self.call_service("group/set_visibility", entity_id = self.group_kern, visible = True )
+    if new == "BBQ":
+      self.log("set to BBQ")
+      self.call_service("group/set_visibility", entity_id = self.group_bbq, visible = True )
+      self.call_service("group/set_visibility", entity_id = self.group_kern, visible = False )
+  def warning_timer(self, kwargs):
+    self.warning = False
+apps.yaml of appdeamon:
+
+Copy to clipboard
+bbq1:
+  module: bbq
+  class: BBQtemp
+  number: 1
+bbq2:
+  module: bbq
+  class: BBQtemp
+  number: 2
+  
