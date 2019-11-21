@@ -1,6 +1,6 @@
-configuration.yaml
+#######configuration.yaml:
 
-Copy to clipboard
+
           - platform: mqtt
             state_topic: "bbq/grill/probe1"
             name: "Probe 1"
@@ -97,9 +97,10 @@ Copy to clipboard
         min: 60
         max: 250
         step: 1
-automations.yaml
 
-Copy to clipboard
+
+##########automations.yaml
+
     - alias: "Monitor Grill Temp Alert"
       trigger:
         - platform: state
@@ -149,9 +150,11 @@ Copy to clipboard
         - service: notify.ios_notify
           data:
             message: "Probe 3 has reached the target temp. Currently {{ states.sensor.probe_3.state }} F"
-ui-lovelace.yaml
 
-Copy to clipboard
+
+#######ui-lovelace.yaml
+
+
     - icon: mdi:pig
         title: iGrill
         cards:
