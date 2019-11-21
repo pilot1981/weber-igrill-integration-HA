@@ -177,3 +177,63 @@ Copy to clipboard
             cards:
              - type: custom:gauge-card
                title: Probe 1
+               entity: sensor.probe_1
+               min: 0
+               max: 350
+               severity:
+                 red: 190
+                 green: 65
+                 amber: 0
+             - type: custom:gauge-card
+               title: Probe 2
+               entity: sensor.probe_2
+               min: 0
+               max: 350
+               severity:
+                 red: 190
+                 green: 65
+                 amber: 0
+          - type: horizontal-stack
+            cards:
+             - type: custom:gauge-card
+               title: Probe 3
+               entity: sensor.probe_3
+               min: 0
+               max: 350
+               severity:
+                 red: 190
+                 green: 65
+                 amber: 0
+             - type: custom:gauge-card
+               title: Probe 4 (Ambient)
+               entity: sensor.probe_4
+               min: 0
+               max: 425
+               severity:
+                 red: 300
+                 green: 90
+                 amber: 0
+    - type: history-graph
+            title: 'History'
+            entities:
+              - sensor.probe_1
+              - sensor.probe_2
+              - sensor.probe_3
+              - sensor.probe_4
+          - type: entities
+            title: iGrill info
+            entities:
+              - input_number.grill_alert_low
+              - input_number.grill_alert_high
+              - sensor.grill_alert_temp
+              - input_number.grill_probe_1_target
+              - sensor.target_alert_temp_probe_1
+              - input_number.grill_probe_2_target
+              - sensor.target_alert_temp_probe_2
+              - input_number.grill_probe_3_target
+              - sensor.target_alert_temp_probe_3
+              - automation.monitor_grill_temp_alert
+              - automation.monitor_grill_temp_normal
+              - automation.probe_1_target_temp
+              - automation.probe_2_target_temp
+              - automation.probe_3_target_temp
